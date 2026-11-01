@@ -1,124 +1,71 @@
-Introduction
-============
+# Lab Software Inventory
 
-![Bower version](https://img.shields.io/bower/v/adminlte.svg)
-[![npm version](https://img.shields.io/npm/v/admin-lte.svg)](https://www.npmjs.com/package/admin-lte)
-[![Packagist](https://img.shields.io/packagist/v/almasaeed2010/adminlte.svg)](https://packagist.org/packages/almasaeed2010/adminlte)
-[![CDNJS](https://img.shields.io/cdnjs/v/admin-lte.svg)](https://cdnjs.com/libraries/admin-lte)
+A PHP + MySQL web application, built on the AdminLTE 2 admin template, for keeping track of computer labs: the software installed in each lab, the weekly class timetable of each lab, and printable timetable spreadsheets.
 
-**AdminLTE** -- is a fully responsive admin template. Based on **[Bootstrap 3](https://github.com/twbs/bootstrap)** framework. Highly customizable and easy to use. Fits many screen resolutions from small mobile devices to large desktops. Check out the live preview now and see for yourself.
+Context: built for the IT department of an educational institution. Author: Nícollas Frazão. The interface is in Brazilian Portuguese.
 
-**Download & Preview on [Almsaeed Studio](https://almsaeedstudio.com)**
+## What it does
 
-Looking for Premium Templates?
-------------------------------
-**Almsaeed studio just opened a new premium templates page. Hand picked to insure the best quality and the most affordable prices. Visit https://almsaeedstudio.com/premium for more information.**
+- **Lab overview** (`laboratorios.php`): one tile per lab for the selected semester (format `<semester>/<year>`, defaulting to the current one). Each tile takes the color of the course that has a class in that lab right now, based on the day of the week and the current time slot (morning 07:30-13:30 in three slots, afternoon 13:30-18:00 and evening 18:00-22:30 in two slots each). A legend lists the courses and their colors.
+- **Add a lab** from a modal on the overview page.
+- **Lab details** (`dadosLaboratorio.php`):
+  - lab name, an "active" flag, and a multi-select (Select2) with the software installed in the lab for that semester;
+  - the lab's weekly timetable, Monday to Saturday, morning/afternoon/evening, three slots each, showing course, subject and professor, with free slots marked as available.
+- **Timetable spreadsheets** (`exibirPlanilha.php`), opened in a new tab and laid out for printing, filtered by semester and by department or course, in three layouts:
+  1. classes per active lab for one period, Monday to Friday;
+  2. the same, Monday to Saturday;
+  3. every period on Saturday.
 
+Class schedules and the software catalog are read from the database; the application has no screen to create them (see Notes).
 
-!["AdminLTE Presentation"] (https://almsaeedstudio.com/AdminLTE2.png "AdminLTE Presentation")
+## Tech stack
 
-**AdminLTE** has been carefully coded with clear comments in all of its JS, LESS and HTML files. LESS has been used to increase code customizability.
+- PHP with PDO (MySQL)
+- MySQL
+- AdminLTE 2.3.8 (Bootstrap 3.3.6, jQuery 2.2.3, Select2), with Font Awesome 4.5.0 and Ionicons 2.0.1 loaded from a CDN
+- A small XMLHttpRequest helper (`dist/js/ajax.js`) for the pages that load fragments from `dist/php/`
 
-Installation
-------------
-There are multiple ways to install AdminLTE.
+## Running locally
 
-####Download:
+The database schema and data are not included.
 
-Download from Github or [visit Almsaeed Studio](https://almsaeedstudio.com) and download the latest release.
+1. Use PHP with the `pdo_mysql` extension and a MySQL server. The application files pass a PHP 7.4 syntax check, except `dist/php/atualizarDadosLaboratorio.php` (see Notes).
+2. Create a database with the tables the code expects:
+   - `tb_laboratorio` (`cd_laboratorio`, `nm_laboratorio`, `ic_ativado`)
+   - `tb_software` (`cd_software`, `nm_software`)
+   - `software_laboratorio` (`cd_software`, `cd_laboratorio`, `ds_semestre`)
+   - `tb_aula` (`cd_aula`, `cd_laboratorio`, `cd_curso`, `cd_materia`, `cd_professor`, `dd_semana_aula`, `ds_periodo` = `M`/`T`/`N`, `cd_horario`, `ds_semestre`)
+   - `tb_curso` (`cd_curso`, `nm_curso`, `ds_cor_hex`, `cd_secretaria`)
+   - `tb_secretaria` (`cd_secretaria`, `nm_secretaria`)
+   - `tb_materia` (`cd_materia`, `nm_materia`)
+   - `tb_professor` (`cd_professor`, `nm_professor`)
+3. Set the connection values in `dist/php/ConexaoPrincipal.php` (the committed credentials are placeholders).
+4. Serve the folder, for example `php -S localhost:8000`, and open `laboratorios.php`.
 
-####Using The Command Line:
-
-**Github**
-
-- Fork the repository ([here is the guide](https://help.github.com/articles/fork-a-repo/)).
-- Clone to your machine
-```
-git clone https://github.com/YOUR_USERNAME/AdminLTE.git
-```
-
-**Bower**
-
-```
-bower install admin-lte
-```
-
-**npm**
-
-```
-npm install --save admin-lte
-```
-
-**Composer**
+## Project structure
 
 ```
-composer require "almasaeed2010/adminlte=~2.0"
+laboratorios.php         Lab overview, add-lab modal, spreadsheet form
+dadosLaboratorio.php     Lab details: software and weekly timetable
+exibirPlanilha.php       Printable timetable spreadsheets
+home.php, menu.php       AdminLTE starter page and shared header/sidebar
+planilhas.php            Older version of the spreadsheet page (not linked)
+dist/php/                Connection and endpoints/fragments (getLaboratorios, getAulas,
+                         getLegendaCursos, adicionarLaboratorio, atualizarDadosLaboratorio)
+dist/js/ajax.js          AJAX helper
+bootstrap/, plugins/, build/, documentation/, pages/, index*.html, starter.html
+                         AdminLTE 2.3.8 template files and demo pages (MIT)
 ```
 
-Documentation
--------------
-Visit the [online documentation](https://almsaeedstudio.com/themes/AdminLTE/documentation/index.html) for the most
-updated guide. Information will be added on a weekly basis.
+## Notes
 
-Browser Support
----------------
-- IE 9+
-- Firefox (latest)
-- Chrome (latest)
-- Safari (latest)
-- Opera (latest)
+This is unfinished legacy code, kept as a portfolio sample:
 
-Contribution
-------------
-Contribution are always **welcome and recommended**! Here is how:
-
-- Fork the repository ([here is the guide](https://help.github.com/articles/fork-a-repo/)).
-- Clone to your machine ```git clone https://github.com/YOUR_USERNAME/AdminLTE.git```
-- Make your changes
-- Create a pull request
-
-#### Contribution Requirements:
-
-- When you contribute, you agree to give a non-exclusive license to Almsaeed Studio to use that contribution in any context as we (Almsaeed Studio) see appropriate.
-- If you use content provided by another party, it must be appropriately licensed using an [open source](http://opensource.org/licenses) license.
-- Contributions are only accepted through Github pull requests.
-- Finally, contributed code must work in all supported browsers (see above for browser support).
-
-License
--------
-AdminLTE is an open source project by [Almsaeed Studio](https://almsaeedstudio.com) that is licensed under [MIT](http://opensource.org/licenses/MIT). Almsaeed Studio
-reserves the right to change the license of future releases.
-
-Todo List
----------
-- ~~Light sidebar colors~~ (Done v2.1.0)
-- ~~Right sidebar~~ (Done v2.1.0)
-- ~~Minified main-sidebar~~ (Done v2.1.0)
-- Right to left support
-- ~~Custom pace style~~ (Done v2.3.1)
-
-Legacy Releases
-----------------
-AdminLTE 1.x can be easily upgraded to 2.x using [this guide](https://almsaeedstudio.com/themes/AdminLTE/documentation/index.html#upgrade), but if you intend to keep using AdminLTE 1.x, you can download the latest release from the [releases](https://github.com/almasaeed2010/AdminLTE/releases) section above.
-
-Change log
-----------
-**For the most recent change log, visit the [releases page](https://github.com/almasaeed2010/AdminLTE/releases) or the [changelog file](https://github.com/almasaeed2010/AdminLTE/blob/master/changelog.md).** We will add a detailed release notes to each new release. 
-
-Image Credits
--------------
-[Pixeden](http://www.pixeden.com/psd-web-elements/flat-responsive-showcase-psd)
-
-[Graphicsfuel](http://www.graphicsfuel.com/2013/02/13-high-resolution-blur-backgrounds/)
-
-[Pickaface](http://pickaface.net/)
-
-[Unsplash](https://unsplash.com/)
-
-[Uifaces](http://uifaces.com/)
-
-Donations
----------
-Donations are **greatly appreciated!**
-
-[![Donate](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif "AdminLTE Presentation")](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=629XCUSXBHCBC "Donate")
+- `dist/php/atualizarDadosLaboratorio.php` ends in the middle of its `UPDATE` statement and does not parse, so saving the lab details form (name, active flag, software list) does not work.
+- The "Schedule" and "Edit" buttons in the timetable call `AbrirEdicaoHorario`, which is not defined; classes have to be entered directly in the database.
+- The software count shown on each class cell is a fixed value.
+- `home.php` and `menu.php` still carry AdminLTE placeholder content (demo user, notifications, tasks).
+- `planilhas.php` mixes `mysqli_*` calls with the PDO connection and links to files that are not in the repository.
+- Some queries use PDO prepared statements with bound parameters; others (`getAulas.php`, `exibirPlanilha.php`) interpolate request values into the SQL string.
+- There is no authentication: the session checks are commented out.
+- There are no automated tests.
